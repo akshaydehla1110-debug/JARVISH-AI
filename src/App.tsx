@@ -11,12 +11,15 @@ import {
   Activity,
   Sliders,
   Check,
+  Download,
+  Github,
 } from 'lucide-react';
 import { ThreeOrb } from './components/ThreeOrb';
 import { JarvisCustomizer } from './components/JarvisCustomizer';
 import { OrbState, ExecutionType } from './types/assistant';
 import { OrbCustomization, DEFAULT_CUSTOMIZATION, PRESET_THEMES } from './types/customization';
 import { audioEngine } from './utils/audioAnalyzer';
+import { generateAndroidStudioProjectZip } from './utils/zipGenerator';
 
 export default function App() {
   // Service Master State
@@ -31,6 +34,27 @@ export default function App() {
   const [isListeningMic, setIsListeningMic] = useState<boolean>(false);
   const [lastExecutedTask, setLastExecutedTask] = useState<string | null>(null);
   const [commandInput, setCommandInput] = useState<string>('');
+  const [isDownloadingZip, setIsDownloadingZip] = useState<boolean>(false);
+  const [showApkGuide, setShowApkGuide] = useState<boolean>(false);
+
+  const handleDownloadZip = async () => {
+    try {
+      setIsDownloadingZip(true);
+      const blob = await generateAndroidStudioProjectZip();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'JARVIS-AI-Android-Project.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download project zip:', err);
+    } finally {
+      setIsDownloadingZip(false);
+    }
+  };
 
   // Handle Customization Patch
   const handleCustomizationChange = (patch: Partial<OrbCustomization>) => {
@@ -334,36 +358,93 @@ export default function App() {
           </div>
         </div>
 
-        {/* Master Service Indicator & Toggle */}
-        <div className="flex items-center gap-3">
+        {/* Actions: Voice, Download Project, and Master Service */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleDownloadZip}
+            disabled={isDownloadingZip}
+            className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-purple-500/20 border border-purple-400/50 text-purple-300 hover:bg-purple-500/30 transition-all cursor-pointer disabled:opacity-50"
+            title="Download complete Android Studio & GitHub project ZIP"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>{isDownloadingZip ? 'Packing...' : 'Download Project (.ZIP)'}</span>
+          </button>
+
+          <button
+            onClick={() => setShowApkGuide(!showApkGuide)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-slate-300 hover:text-white transition-all cursor-pointer"
+            title="How to build APK from GitHub in 1 minute"
+          >
+            <Github className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline">GitHub APK Guide</span>
+          </button>
+
           <button
             onClick={handleToggleListening}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer ${
               isListeningMic
                 ? 'bg-rose-500/20 border-rose-400/60 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
                 : 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/30'
             }`}
           >
             {isListeningMic ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
-            <span>{isListeningMic ? 'Listening...' : 'Voice Command'}</span>
+            <span>{isListeningMic ? 'Listening...' : 'Voice'}</span>
           </button>
 
           <button
             onClick={handleToggleService}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all cursor-pointer ${
               isServiceActive
                 ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300'
                 : 'bg-slate-800 border-white/10 text-slate-400'
             }`}
           >
             <Power className="w-3.5 h-3.5" />
-            <span>Service: {isServiceActive ? 'ON' : 'OFF'}</span>
+            <span>{isServiceActive ? 'Service ON' : 'Service OFF'}</span>
           </button>
         </div>
       </header>
 
       {/* 2. MAIN VIEWPORT: 3D Orb Stage & Setup Panel (NO MOCK PHONES / NO BLUR AROUND ORB) */}
       <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 space-y-6">
+        {/* GitHub APK Fast Build Banner */}
+        {showApkGuide && (
+          <div className="liquid-glass-card p-5 rounded-3xl border border-cyan-400/40 bg-cyan-950/20 space-y-3 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-bold text-white">
+                <Github className="w-4 h-4 text-cyan-400" />
+                <span>GitHub se 1-Minute me APK kaise banaye:</span>
+              </div>
+              <button
+                onClick={() => setShowApkGuide(false)}
+                className="text-xs text-slate-400 hover:text-white cursor-pointer"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-slate-300">
+              <div className="liquid-glass p-3 rounded-2xl space-y-1">
+                <span className="font-semibold text-cyan-300 block">Step 1: Push to GitHub</span>
+                <p className="text-[11px] text-slate-400">
+                  Is repo ko GitHub par push kro ya upar se <strong>"Download Project (.ZIP)"</strong> click krke GitHub repo me upload kro.
+                </p>
+              </div>
+              <div className="liquid-glass p-3 rounded-2xl space-y-1">
+                <span className="font-semibold text-emerald-300 block">Step 2: Auto Build (GitHub Actions)</span>
+                <p className="text-[11px] text-slate-400">
+                  Humne <code className="text-cyan-300 font-mono">.github/workflows/build-apk.yml</code> add kr diya h. Push krte hi GitHub automatically APK build kr dega!
+                </p>
+              </div>
+              <div className="liquid-glass p-3 rounded-2xl space-y-1">
+                <span className="font-semibold text-purple-300 block">Step 3: Download APK</span>
+                <p className="text-[11px] text-slate-400">
+                  GitHub repo ke <strong>"Actions"</strong> tab me jao &gt; latest run open kro &gt; <strong>"JARVIS-AI-debug-apk"</strong> download kr lo!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* LIVE 3D FLUID ORB STAGE */}
         <div className="flex flex-col items-center justify-center relative py-4">
           {/* Positioned 3D Orb (Zero blur around the orb, 100% visible and clean) */}

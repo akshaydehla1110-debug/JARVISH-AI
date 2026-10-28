@@ -38,6 +38,64 @@ include(":app")
   );
 
   zip.file(
+    '.github/workflows/build-apk.yml',
+    `name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: chmod +x gradlew
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+      - run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JARVIS-AI-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+`
+  );
+
+  zip.file(
+    'gradlew',
+    `#!/bin/sh
+exec gradle "$@"
+`
+  );
+
+  zip.file(
+    'gradlew.bat',
+    `@echo off
+gradle %*
+`
+  );
+
+  zip.file(
+    'gradle/wrapper/gradle-wrapper.properties',
+    `distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-bin.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+`
+  );
+
+  zip.file(
     'gradle.properties',
     `org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
 android.useAndroidX=true

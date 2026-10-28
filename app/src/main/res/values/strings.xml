@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">JARVIS AI</string>
+    <string name="accessibility_service_description">Autonomous headless UI execution engine for JARVIS voice commands.</string>
+</resources>
