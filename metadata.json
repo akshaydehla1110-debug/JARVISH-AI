@@ -1,0 +1,6 @@
+{
+  "name": "JARVIS AI — Next-Gen Android Voice Assistant & 3D Liquid Orb System",
+  "description": "System-level Android voice assistant architecture featuring real-time 3D fluid morphing orb, liquid glass overlay, zero-talk OS automation pipeline, and dual-engine AI reasoning.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
